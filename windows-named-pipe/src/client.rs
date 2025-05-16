@@ -1,7 +1,7 @@
 
 use std::{thread::JoinHandle, time::Duration, u32};
 
-use windows::Win32::{Foundation::{ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, ERROR_SEM_TIMEOUT, GENERIC_ACCESS_RIGHTS, GENERIC_READ, GENERIC_WRITE}, Storage::FileSystem::{CreateFileA, FILE_FLAG_OVERLAPPED, FILE_SHARE_NONE, OPEN_EXISTING}, System::Pipes::{WaitNamedPipeA, NMPWAIT_USE_DEFAULT_WAIT, NMPWAIT_WAIT_FOREVER}};
+use windows::Win32::{Foundation::{CloseHandle, ERROR_FILE_NOT_FOUND, ERROR_PIPE_BUSY, ERROR_SEM_TIMEOUT, GENERIC_ACCESS_RIGHTS, GENERIC_READ, GENERIC_WRITE}, Storage::FileSystem::{CreateFileA, FILE_FLAG_OVERLAPPED, FILE_SHARE_NONE, OPEN_EXISTING}, System::Pipes::{WaitNamedPipeA, NMPWAIT_USE_DEFAULT_WAIT, NMPWAIT_WAIT_FOREVER}};
 
 use crate::utils::*;
 
@@ -67,8 +67,13 @@ impl Client {
         new_thread(move || callback(Self::wait(&pipe_name)))
     }
     
-    pub fn initialize(self, buffer: NamedPipeBuffer, runtime: impl NamedPipeRuntimeExecutor) -> WindowsResult<NamedPipe> {
+    pub fn initialize(&self, buffer: NamedPipeBuffer, runtime: impl NamedPipeRuntimeExecutor) -> WindowsResult<NamedPipe> {
         let Self(handle) = self;
-        NamedPipe::new(handle, buffer, runtime)
+        NamedPipe::new(*handle, buffer, runtime)
+    }
+    
+    pub fn close(self) -> WindowsResult<()> {
+        let Self(handle) = self;
+        unsafe { CloseHandle(handle) }
     }
 }

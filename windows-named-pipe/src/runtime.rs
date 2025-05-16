@@ -118,7 +118,7 @@ impl NamedPipeRuntime {
     // returns true if there is no ongoing write operation
     pub fn write(&mut self, len: usize) -> WindowsResult<bool> {
         unsafe {
-            if self.write_buf().is_none_or(|buffer| !(1..buffer.len()).contains(&len)) { Ok(false) }
+            if self.write_buf().is_none_or(|buffer| !(1..=buffer.len()).contains(&len)) { Ok(false) }
             else {
                 self.buffer.write.set_event(self.events.write());
                 
